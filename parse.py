@@ -2,22 +2,14 @@ from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModel
 from elasticsearch import Elasticsearch, helpers
 from tqdm import tqdm
-from huggingface_hub import login
 import torch
-
-# Логин в Hugging Face Hub (если требуется)
-login()
 
 # Подключение к Elasticsearch
 es = Elasticsearch(["http://localhost:9200"])
 
 # Проверка доступности GPU
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-    print(f"GPU доступен: {torch.cuda.get_device_name(0)}")
-else:
-    device = torch.device("cpu")
-    print("GPU недоступен, используется CPU.")
+device = torch.device("cpu")
+print("GPU недоступен, используется CPU.")
 
 # Проверка соединения с Elasticsearch
 if not es.ping():
@@ -47,8 +39,8 @@ def encode_text(text):
 
 def encode_product(product):
     """ Кодирует текстовую информацию о товаре в эмбеддинг """
-    text_data = f"{product.get('name', '')} {product.get('brand', '')} {product.get('description', '')} " \
-                f"{' '.join(product.get('categories', []))} {product.get('params_str', '')}"
+    text_data = f"{product.get('imt_name', '')} {product.get('brand_name', '')} {product.get('description', '')} " \
+                f"{' '.join(product.get('subj_name', []))} {product.get('subj_root_name', '')}"
     return encode_text(text_data)
 
 
@@ -71,44 +63,40 @@ def load_and_index_dataset():
     """ Загружает датасет и индексирует товары в Elasticsearch с использованием Bulk API """
     # Загрузка датасета
     print('load_dataset')
-    dataset = load_dataset("nyuuzyou/wb-products", split="train")
+    dataset = load_dataset('json', data_files='dataset.json', split='train')
+    dataset = dataset.select(range(1000))
     print('end load_dataset')
 
     # Создание индекса в Elasticsearch
     create_index()
 
     # Подготовка данных для Bulk API
-    actions = []
-    for product in tqdm(dataset, desc="Подготовка данных для индексации"):
+    bulk_data = []
+    for index,product in enumerate(tqdm(dataset, desc="Подготовка данных для индексации")):
         try:
             # Преобразуем товар в нужный формат
             product_dict = {
-                "id": product["id"],
-                "name": product["name"],
-                "brand": product["brand"],
+                "id": product["imt_id"],
+                "name": product["imt_name"],
+                "brand": product["brand_name"],
                 "description": product["description"],
-                "categories": product["categories"],
-                "params_str": product["params_str"],
+                "categories": product["subj_name"],
+                "params_str": product["subj_root_name"],
             }
             # Кодируем текст в эмбеддинг
             product_dict["embedding"] = encode_product(product_dict)
 
             # Добавляем действие для Bulk API
-            actions.append({
-                "_index": "products",
-                "_id": product_dict["id"],
-                "_source": product_dict
+            bulk_data.append({
+                "index": {
+                    "_index": "products",
+                    "_id": index
+                }
             })
+            bulk_data.append(product_dict)
         except Exception as e:
-            print(f"Ошибка при подготовке товара {product['id']}: {e}")
-
-    # Индексация товаров с использованием Bulk API
-    try:
-        helpers.bulk(es, actions)
-        print("Индексация завершена успешно!")
-    except Exception as e:
-        print(f"Ошибка при индексации: {e}")
-
+            print(f"Ошибка при подготовке товара {index}: {e}")
+        es.bulk(body=bulk_data, index="products")
 
 # Запуск процесса загрузки и индексации
 load_and_index_dataset()
