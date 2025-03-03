@@ -52,7 +52,7 @@ def create_index():
             body={
                 "mappings": {
                     "properties": {
-                        "embedding": {"type": "dense_vector", "dims": 1024}  # Mistral выдаёт 1024-мерные эмбеддинги
+                        "embedding": {"type": "dense_vector", "dims": 4096}  # Mistral выдаёт 1024-мерные эмбеддинги
                     }
                 }
             }
