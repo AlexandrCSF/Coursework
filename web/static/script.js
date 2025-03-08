@@ -29,20 +29,30 @@ async function searchProducts(query) {
         console.error('Error:', error);
     }
 }
-
 function displayResults(results) {
     const resultsContainer = document.getElementById('results');
     resultsContainer.innerHTML = '';
 
     if (results.length === 0) {
-        resultsContainer.innerHTML = '<p>Ничего не найдено.</p>';
+        resultsContainer.innerHTML = '<p class="no-results">Ничего не найдено.</p>';
         return;
     }
 
     results.forEach(result => {
+        const { name, description, picture } = result._source; // Замените на ваши поля
+
         const item = document.createElement('div');
         item.className = 'result-item';
-        item.innerHTML = `<strong>${result._source.name}</strong><br>${result._source.description}`; // Замените поля на ваши
+
+        item.innerHTML = `
+            <div class="result-card">
+                <div class="result-info">
+                    <h3 class="result-title">${name}</h3>
+                    <p class="result-description">${description}</p>
+                </div>
+            </div>
+        `;
+
         resultsContainer.appendChild(item);
     });
 }

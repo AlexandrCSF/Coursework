@@ -27,7 +27,7 @@ def encode_text(text):
 def encode_product(product):
     """ Кодирует текстовую информацию о товаре в эмбеддинг """
     text_data = f"{product.get('name', '')} {product.get('brand', '')} {product.get('description', '')} " \
-                f"{' '.join(product.get('categories', []))} {product.get('params_str', '')}"
+                f"{product.get('categories', '')} {product.get('params_str', '')}"
     return encode_text(text_data)
 
 
@@ -51,7 +51,7 @@ def load_and_index_dataset():
     # Загрузка датасета
     print('load_dataset')
     dataset = load_dataset("breadlicker45/products",split='train')
-    dataset = dataset.select(range(5))
+    dataset = dataset.select(range(100))
     print('end load_dataset')
 
     # Создание индекса в Elasticsearch
@@ -69,6 +69,7 @@ def load_and_index_dataset():
                 "description": product["description"],
                 "categories": product["amazon_category_and_sub_category"],
                 "params_str": product["product_information"],
+                "picture": 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pixsy.com%2Fimage-theft%2Fverify-image-source-copyright-owner&psig=AOvVaw3sptq6uKBUX8dL051JtPC8&ust=1741552195372000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKC90veo-4sDFQAAAAAdAAAAABAO'
             }
             # Кодируем текст в эмбеддинг
             product_dict["embedding"] = encode_product(product_dict)
