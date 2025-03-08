@@ -38,75 +38,63 @@ body {
 #searchButton:hover {
     background-color: #0056b3;
     }
-    #results {
+#results {
     display: flex;
-    overflow-x: auto; /* Добавляем горизонтальный скролл, если карточек много */
-    gap: 15px;
+    overflow-x: auto;
+    gap: 10px;
     padding: 10px;
-    white-space: nowrap; /* Запрещаем перенос строк */
+    white-space: nowrap;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.result-item {
-    flex: 0 0 auto; /* Карточки не растягиваются, но остаются фиксированной ширины */
-    width: 250px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    transition: transform 0.2s ease-in-out;
-}
-
-.result-item:hover {
-    transform: translateY(-5px);
-}
-
-
-.result-card {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 500px; /* Или другой подходящий размер */
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #fff;
-    word-wrap: break-word;
-    overflow: visible;
-}
 .result-item {
     flex: 0 0 auto;
-    width: 250px;
+    width: 150px;
+    height: 180px;
     background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     transition: transform 0.2s ease-in-out;
-    min-height: 200px; /* Минимальная высота карточки */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    padding: 8px;
 }
 
-.result-info {
-    display: flex;
-    flex-direction: column;
-    padding-right: 10px; /* Отступ от текста до края карточки */
+.result-item:hover {
+    transform: translateY(-3px);
 }
 
 .result-title {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
-    margin-bottom: 5px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    padding-right: 10px; /* Отступ от текста до края карточки */
+    margin-bottom: 3px;
+    text-align: center;
+    white-space: normal; /* Разрешаем перенос строк */
+    word-break: break-word; /* Обрезаем длинные слова, если они не помещаются */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .result-description {
-    font-size: 14px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    padding-right: 10px; /* Отступ от текста до края карточки */
+    font-size: 12px;
+    text-align: center;
+    color: #555;
+    white-space: normal; /* Разрешаем перенос строк */
+    word-break: break-word; /* Обрезаем длинные слова */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4; /* Ограничиваем описание до 4 строк */
+    -webkit-box-orient: vertical;
+    max-height: 48px; /* Ограничиваем максимальную высоту для 4 строк */
+}
+
+.search-container {
+    width: 100%;
+    max-width: 900px;
 }
 .no-results {
     text-align: center;
