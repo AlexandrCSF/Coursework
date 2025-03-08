@@ -5,7 +5,7 @@ import requests
 import torch
 from flask import Flask, jsonify, request
 
-#from web import tokenizer, model, device
+from web import model
 
 app = Flask(__name__)
 
@@ -62,29 +62,23 @@ def generate_all_multi_match_queries(word):
 
 def encode_text(text):
     """ Кодирует текст в эмбеддинг """
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-
-    # Перемещаем входные данные на GPU
-    inputs = {key: value.to(device) for key, value in inputs.items()}
-
-    with torch.no_grad():
-        embeddings = model(**inputs).last_hidden_state[:, 0, :]  # Берем первый токен [CLS]
+    embeddings = model.encode(text)
 
     # Перемещаем результат обратно на CPU (если нужно)
-    return embeddings.cpu().squeeze().tolist()
+    return embeddings.squeeze().tolist()
 
 
 @app.route('/search', methods=['POST'])
 def search():
     data = request.json
     query = data.get('query', '')
-    url = "http://localhost:9200/products/_search"
+    url = "http://localhost:9200/products2/_search"
     headers = {'Content-Type': 'application/json'}
 
     payload = generate_query_vector_search(
         min_score=0,
         size=10,
-        vector=json.loads(requests.post(url, headers=headers, json={'query':{'match_all':{}}}).text)['hits']['hits'][0]['_source']['embedding']
+        vector=encode_text(query)
     )
     response = requests.post(url, headers=headers, json=payload)
 

@@ -1,7 +1,5 @@
 import torch
-from transformers import AutoTokenizer, AutoModel
+from sentence_transformers import SentenceTransformer
 
 device = torch.device("cpu")
-#tokenizer = AutoTokenizer.from_pretrained('Salesforce/SFR-Embedding-Mistral')
-#tokenizer.add_eos_token = True
-#model = AutoModel.from_pretrained('Salesforce/SFR-Embedding-Mistral').to(device)
+model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
