@@ -73,26 +73,41 @@ body {
     word-wrap: break-word;
     overflow: visible;
 }
+.result-item {
+    flex: 0 0 auto;
+    width: 250px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+    min-height: 200px; /* Минимальная высота карточки */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
 
 .result-info {
     display: flex;
     flex-direction: column;
+    padding-right: 10px; /* Отступ от текста до края карточки */
 }
 
 .result-title {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 5px;
-    white-space: pre-wrap; /* Сохраняет переносы строк */
-    word-break: break-word; /* Переносит длинные слова */
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-right: 10px; /* Отступ от текста до края карточки */
 }
 
 .result-description {
     font-size: 14px;
-    white-space: pre-wrap; /* Сохраняет переносы строк */
-    word-break: break-word; /* Переносит длинные слова */
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-right: 10px; /* Отступ от текста до края карточки */
 }
-
 .no-results {
     text-align: center;
     font-size: 1.2em;
