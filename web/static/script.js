@@ -39,13 +39,15 @@ function displayResults(results) {
     }
 
     results.forEach(result => {
-        const { name, description, picture } = result._source; // Замените на ваши поля
-
+        const { name, description, picture } = result._source;
+        const imageUrl = 'https://thumb.ac-illust.com/b1/b170870007dfa419295d949814474ab2_t.jpeg';
+        console.log(imageUrl)
         const item = document.createElement('div');
         item.className = 'result-item';
 
         item.innerHTML = `
             <div class="result-card">
+                <img src="${imageUrl}" alt="${name}" width="150" height="80" />
                 <div class="result-info">
                     <h3 class="result-title">${name}</h3>
                     <p class="result-description">${description}</p>
