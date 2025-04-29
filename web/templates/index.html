@@ -9,8 +9,16 @@
 <body>
     <div class="search-container">
         <h1>Поиск товаров</h1>
-        <input type="text" id="searchInput" placeholder="Введите название товара...">
-        <button id="searchButton">Найти</button>
+        <div class="search-controls">
+            <input type="text" id="searchInput" placeholder="Введите название товара...">
+            <select id="modelSelect">
+                <option value="mpnet">MPNet Base</option>
+                <option value="minilm">MiniLM</option>
+                <option value="qa-mpnet">QA MPNet</option>
+                <option value="multilingual">Multilingual MPNet</option>
+            </select>
+            <button id="searchButton">Найти</button>
+        </div>
         <div id="results"></div>
     </div>
 

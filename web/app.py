@@ -1,14 +1,27 @@
 import json
-
 import flask
 import requests
-import torch
 from flask import Flask, jsonify, request
-
-from web import model
+from sentence_transformers import SentenceTransformer
+import torch
 
 app = Flask(__name__)
 
+# Список моделей для эмбеддингов
+MODELS = {
+    'mpnet': 'sentence-transformers/all-mpnet-base-v2',
+    'minilm': 'sentence-transformers/all-MiniLM-L6-v2',
+    'qa-mpnet': 'sentence-transformers/multi-qa-mpnet-base-dot-v1',
+    'multilingual': 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
+}
+
+# Загрузка моделей
+models = {}
+for model_name, model_path in MODELS.items():
+    print(f"Загрузка модели {model_name}...")
+    models[model_name] = SentenceTransformer(model_path)
+    if torch.cuda.is_available():
+        models[model_name] = models[model_name].to('cuda')
 
 def generate_query_vector_search(vector, size, min_score):
     return {
@@ -60,11 +73,10 @@ def generate_all_multi_match_queries(word):
 #    }
 #
 
-def encode_text(text):
-    """ Кодирует текст в эмбеддинг """
+def encode_text(text, model_name):
+    """ Кодирует текст в эмбеддинг с использованием указанной модели """
+    model = models[model_name]
     embeddings = model.encode(text)
-
-    # Перемещаем результат обратно на CPU (если нужно)
     return embeddings.squeeze().tolist()
 
 
@@ -72,14 +84,47 @@ def encode_text(text):
 def search():
     data = request.json
     query = data.get('query', '')
-    url = "http://localhost:9200/products2/_search"
+    model_name = data.get('model', 'mpnet')  # По умолчанию используем mpnet
+    
+    if model_name not in MODELS:
+        return jsonify({'error': f'Model {model_name} not found'}), 400
+        
+    url = f"http://localhost:9200/products_{model_name}/_search"
     headers = {'Content-Type': 'application/json'}
 
-    payload = generate_query_vector_search(
-        min_score=0,
-        size=10,
-        vector=encode_text(query)
-    )
+    # Создаем комбинированный запрос с взвешенной суммой оценок
+    payload = {
+        "query": {
+            "script_score": {
+                "query": generate_all_multi_match_queries(query),
+                "script": {
+                    "source": """
+                    // Нормализация векторного поиска (косинусное сходство в диапазоне [-1, 1])
+                    double vectorScore = (cosineSimilarity(params.query_vector, 'embedding') + 1.0) / 2.0;
+                    
+                    // Нормализация полнотекстового поиска
+                    // Используем min-max нормализацию для _score
+                    double textScore = _score;
+                    if (textScore > params.max_score) {
+                        textScore = params.max_score;
+                    }
+                    textScore = textScore / params.max_score;
+                    
+                    // Взвешенная сумма нормализованных оценок
+                    return params.vector_weight * vectorScore + params.text_weight * textScore;
+                    """,
+                    "params": {
+                        "query_vector": encode_text(query, model_name),
+                        "vector_weight": 0.7,  # Вес для векторного поиска
+                        "text_weight": 0.3,    # Вес для полнотекстового поиска
+                        "max_score": 10.0      # Максимальная ожидаемая оценка для полнотекстового поиска
+                    }
+                }
+            }
+        },
+        "size": 10
+    }
+    
     response = requests.post(url, headers=headers, json=payload)
 
     if response.status_code != 200:
