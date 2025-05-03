@@ -36,9 +36,9 @@ def encode_product(product, model):
                 f"{product.get('categories', '')} {product.get('params_str', '')}"
     return encode_text(text_data, model)
 
-def create_index(model_name):
-    """ Создает индекс с dense_vector для указанной модели """
-    index_name = f"products_{model_name}"
+def create_index(dataset_name, model_name):
+    """ Создает индекс с dense_vector для указанной модели и датасета """
+    index_name = f"products_{dataset_name}_{model_name}"
     if not es.indices.exists(index=index_name):
         es.indices.create(
             index=index_name,
@@ -53,17 +53,23 @@ def create_index(model_name):
 
 def load_and_index_dataset():
     """ Загружает датасет и индексирует товары в Elasticsearch с использованием Bulk API """
-    # Загрузка датасета
-    print('load_dataset')
-    dataset = load_dataset("breadlicker45/products", split='train')
-    print('end load_dataset')
+    datasets = ['breadlicker45/products','nyuuzyou/wb-products']
+    print('Loading first dataset...')
+    dataset1 = load_dataset(datasets[0], split='train')
+    print('Loading second dataset...')
+    dataset2 = load_dataset(datasets[1], split='train').select(range(1000))
+    print('Datasets loaded')
 
-    # Создание индексов для каждой модели
     for model_name in MODELS.keys():
-        create_index(model_name)
+        create_index('amazon', model_name)  # для первого датасета
+    create_index('wildberries', 'multilingual')  # для второго датасета
+    
     bulk_data = []
     i = 1
-    for index, product in enumerate(tqdm(dataset, desc="Подготовка данных для индексации")):
+    
+    # Обработка первого датасета
+    print("Processing first dataset...")
+    for index, product in enumerate(tqdm(dataset1, desc="Подготовка данных первого датасета")):
         try:
             product_dict = {
                 "id": product.get('uniq_id', index),
@@ -84,19 +90,51 @@ def load_and_index_dataset():
                 bulk_data.append(
                     {
                         "index": {
-                            "_index": f"products_{model_name}",
+                            "_index": f"products_amazon_{model_name}",
                             "_id": i
                         }
                     },
                 )
                 bulk_data.append(payload)
                 i += 1
-            if len(bulk_data) > 500:
-                es.bulk(body=bulk_data, request_timeout=1000)
-                bulk_data = []
         except Exception as e:
             print(f"Ошибка при подготовке товара {index}: {e}")
-    print(es.bulk(body=bulk_data,request_timeout=1000)['errors'])
+    
+    # Обработка второго датасета только через multilingual модель
+    print("Processing second dataset with multilingual model...")
+    for index, product in enumerate(tqdm(dataset2, desc="Подготовка данных второго датасета")):
+        try:
+            product_dict = {
+                "id": product.get('id', f"wb_{index}"),
+                "name": product.get('name', ''),
+                "brand": product.get('brand', ''),
+                "description": product.get('description', ''),
+                "categories": product.get('category', ''),
+                "params_str": product.get('characteristics', ''),
+                "picture": product.get('image', '')
+            }
+
+            # Индексируем товар только для multilingual модели
+            payload = product_dict.copy()
+            payload["embedding"] = encode_product(product_dict, models['multilingual'])
+
+            # Добавляем действие для Bulk API
+            bulk_data.append(
+                {
+                    "index": {
+                        "_index": "products_wildberries_multilingual",
+                        "_id": i
+                    }
+                },
+            )
+            bulk_data.append(payload)
+            i += 1
+        except Exception as e:
+            print(f"Ошибка при подготовке товара {index}: {e}")
+    
+    print("Indexing data...")
+    print(es.bulk(body=bulk_data, request_timeout=1000)['errors'])
+
 # Запуск процесса загрузки и индексации
 if __name__ == "__main__":
     load_and_index_dataset()
