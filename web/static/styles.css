@@ -6,7 +6,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .search-container {
@@ -14,11 +14,47 @@ body {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    text-align: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 20px;
 }
 
-.search-controls {
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #666;
+    border-radius: 4px;
+}
+
+.tab-button:hover {
+    background-color: #f0f0f0;
+}
+
+.tab-button.active {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.search-controls, .all-products-controls {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
@@ -31,14 +67,14 @@ body {
     border-radius: 4px;
 }
 
-#modelSelect {
+#modelSelect, #datasetSelect, #allProductsModelSelect {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: white;
 }
 
-#searchButton {
+#searchButton, #loadAllProductsButton {
     padding: 10px 20px;
     background-color: #007bff;
     color: #fff;
@@ -47,8 +83,57 @@ body {
     cursor: pointer;
 }
 
-#searchButton:hover {
+#searchButton:hover, #loadAllProductsButton:hover {
     background-color: #0056b3;
+}
+
+.products-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dataset-section {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.dataset-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.pagination button {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+#currentPage {
+    font-size: 14px;
+    color: #666;
 }
 
 #results {
@@ -103,11 +188,6 @@ body {
     -webkit-line-clamp: 4; /* Ограничиваем описание до 4 строк */
     -webkit-box-orient: vertical;
     max-height: 48px; /* Ограничиваем максимальную высоту для 4 строк */
-}
-
-.search-container {
-    width: 100%;
-    max-width: 900px;
 }
 
 .no-results {

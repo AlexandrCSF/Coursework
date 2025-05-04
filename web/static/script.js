@@ -1,16 +1,115 @@
+// Tab switching
+document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', () => {
+        // Remove active class from all buttons and contents
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Add active class to clicked button and corresponding content
+        button.classList.add('active');
+        document.getElementById(`${button.dataset.tab}-tab`).classList.add('active');
+        
+        // Load products if switching to all products tab
+        if (button.dataset.tab === 'all-products') {
+            loadAllProducts(currentPage);
+        }
+    });
+});
+
+// Search functionality
 document.getElementById('searchButton').addEventListener('click', function() {
     const query = document.getElementById('searchInput').value;
     const model = document.getElementById('modelSelect').value;
+    const dataset = document.getElementById('datasetSelect').value;
     if (query) {
-        searchProducts(query, model);
+        searchProducts(query, model, dataset);
     }
 });
 
-async function searchProducts(query, model) {
+// All products functionality
+let currentPage = 1;
+const productsPerPage = 20;
+
+document.getElementById('prevPage').addEventListener('click', function() {
+    if (currentPage > 1) {
+        currentPage--;
+        loadAllProducts(currentPage);
+    }
+});
+
+document.getElementById('nextPage').addEventListener('click', function() {
+    currentPage++;
+    loadAllProducts(currentPage);
+});
+
+async function loadAllProducts(page) {
+    const url = `http://127.0.0.1:5000/all_products?page=${page}&size=${productsPerPage}`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update pagination controls
+        document.getElementById('currentPage').textContent = `Страница ${page}`;
+        document.getElementById('prevPage').disabled = page === 1;
+        document.getElementById('nextPage').disabled = 
+            data.amazon.length < productsPerPage && data.wildberries.length < productsPerPage;
+        
+        // Display products
+        displayAllProducts(data);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function displayAllProducts(data) {
+    // Display Amazon products
+    const amazonContainer = document.getElementById('amazon-products');
+    amazonContainer.innerHTML = '';
+    data.amazon.forEach(product => {
+        const item = createProductCard(product._source);
+        amazonContainer.appendChild(item);
+    });
+    
+    // Display Wildberries products
+    const wildberriesContainer = document.getElementById('wildberries-products');
+    wildberriesContainer.innerHTML = '';
+    data.wildberries.forEach(product => {
+        const item = createProductCard(product._source);
+        wildberriesContainer.appendChild(item);
+    });
+}
+
+function createProductCard(product) {
+    const { name, description, picture } = product;
+    const imageUrl = 'https://thumb.ac-illust.com/b1/b170870007dfa419295d949814474ab2_t.jpeg';
+    
+    const item = document.createElement('div');
+    item.className = 'result-item';
+    
+    item.innerHTML = `
+        <div class="result-card">
+            <img src="${imageUrl}" alt="${name}" width="150" height="80" />
+            <div class="result-info">
+                <h3 class="result-title">${name}</h3>
+                <p class="result-description">${description}</p>
+            </div>
+        </div>
+    `;
+    
+    return item;
+}
+
+async function searchProducts(query, model, dataset) {
     const url = 'http://127.0.0.1:5000/search';
     const payload = { 
         query: query,
-        model: model
+        model: model,
+        dataset: dataset
     };
 
     console.log(payload);
@@ -45,22 +144,7 @@ function displayResults(results) {
     }
 
     results.forEach(result => {
-        const { name, description, picture } = result._source;
-        const imageUrl = 'https://thumb.ac-illust.com/b1/b170870007dfa419295d949814474ab2_t.jpeg';
-        console.log(imageUrl)
-        const item = document.createElement('div');
-        item.className = 'result-item';
-
-        item.innerHTML = `
-            <div class="result-card">
-                <img src="${imageUrl}" alt="${name}" width="150" height="80" />
-                <div class="result-info">
-                    <h3 class="result-title">${name}</h3>
-                    <p class="result-description">${description}</p>
-                </div>
-            </div>
-        `;
-
+        const item = createProductCard(result._source);
         resultsContainer.appendChild(item);
     });
 }

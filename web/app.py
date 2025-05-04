@@ -2,26 +2,9 @@ import json
 import flask
 import requests
 from flask import Flask, jsonify, request
-from sentence_transformers import SentenceTransformer
-import torch
+from web import models, MODELS, es, dataset_amazon, dataset_wildberries
 
 app = Flask(__name__)
-
-# Список моделей для эмбеддингов
-MODELS = {
-    'mpnet': 'sentence-transformers/all-mpnet-base-v2',
-    'minilm': 'sentence-transformers/all-MiniLM-L6-v2',
-    'qa-mpnet': 'sentence-transformers/multi-qa-mpnet-base-dot-v1',
-    'multilingual': 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
-}
-
-# Загрузка моделей
-models = {}
-for model_name, model_path in MODELS.items():
-    print(f"Загрузка модели {model_name}...")
-    models[model_name] = SentenceTransformer(model_path)
-    if torch.cuda.is_available():
-        models[model_name] = models[model_name].to('cuda')
 
 def generate_query_vector_search(vector, size, min_score):
     return {
@@ -52,44 +35,26 @@ def generate_all_multi_match_queries(word):
         }
     }
 
-#def generate_query_vector_search(vector, size, min_score):
-#    return {
-#        "query": {
-#            "script_score": {
-#                "query": {
-#                    "match_all": {}
-#                },
-#                "script": {
-#                    "source": "cosineSimilarity(params.vector, 'vector') + 1",
-#                    "lang": "painless",
-#                    "params": {
-#                        "vector": vector
-#                    }
-#                }
-#            }
-#        },
-#        "size": size,
-#        "min_score": min_score
-#    }
-#
-
 def encode_text(text, model_name):
-    """ Кодирует текст в эмбеддинг с использованием указанной модели """
+    """Кодирует текст в эмбеддинг с использованием указанной модели"""
     model = models[model_name]
     embeddings = model.encode(text)
     return embeddings.squeeze().tolist()
-
 
 @app.route('/search', methods=['POST'])
 def search():
     data = request.json
     query = data.get('query', '')
     model_name = data.get('model', 'mpnet')  # По умолчанию используем mpnet
+    dataset = data.get('dataset', 'amazon')  # По умолчанию используем amazon
     
     if model_name not in MODELS:
         return jsonify({'error': f'Model {model_name} not found'}), 400
         
-    url = f"http://localhost:9200/products_{model_name}/_search"
+    if dataset not in ['amazon', 'wildberries']:
+        return jsonify({'error': f'Dataset {dataset} not found. Available datasets: amazon, wildberries'}), 400
+        
+    url = f"http://localhost:9200/products_{dataset}_{model_name}/_search"
     headers = {'Content-Type': 'application/json'}
 
     # Создаем комбинированный запрос с взвешенной суммой оценок
@@ -131,6 +96,54 @@ def search():
         return jsonify({'error': 'Failed to fetch results'}), response.status_code
 
     return jsonify(response.json())
+
+@app.route('/all_products', methods=['GET'])
+def get_all_products():
+    page = int(request.args.get('page', 1))
+    size = int(request.args.get('size', 20))
+    
+    # Получаем товары из Amazon
+    amazon_url = f"http://localhost:9200/products_mpnet_amazon/_search"
+    amazon_payload = {
+        "query": {"match_all": {}},
+        "from": (page - 1) * size,
+        "size": size
+    }
+    
+    # Получаем товары из Wildberries
+    wildberries_url = f"http://localhost:9200/products_mpnet_wildberries/_search"
+    wildberries_payload = {
+        "query": {"match_all": {}},
+        "from": (page - 1) * size,
+        "size": size
+    }
+    
+    headers = {'Content-Type': 'application/json'}
+    
+    try:
+        amazon_response = requests.post(amazon_url, headers=headers, json=amazon_payload)
+        wildberries_response = requests.post(wildberries_url, headers=headers, json=wildberries_payload)
+        
+        if amazon_response.status_code != 200 or wildberries_response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch results'}), 500
+            
+        amazon_data = amazon_response.json()
+        wildberries_data = wildberries_response.json()
+        
+        # Объединяем результаты
+        all_products = {
+            'amazon': amazon_data['hits']['hits'],
+            'wildberries': wildberries_data['hits']['hits'],
+            'total': {
+                'amazon': amazon_data['hits']['total']['value'],
+                'wildberries': wildberries_data['hits']['total']['value']
+            }
+        }
+        
+        return jsonify(all_products)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.get("/")
 def get():

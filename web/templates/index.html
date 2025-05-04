@@ -9,17 +9,47 @@
 <body>
     <div class="search-container">
         <h1>Поиск товаров</h1>
-        <div class="search-controls">
-            <input type="text" id="searchInput" placeholder="Введите название товара...">
-            <select id="modelSelect">
-                <option value="mpnet">MPNet Base</option>
-                <option value="minilm">MiniLM</option>
-                <option value="qa-mpnet">QA MPNet</option>
-                <option value="multilingual">Multilingual MPNet</option>
-            </select>
-            <button id="searchButton">Найти</button>
+        
+        <div class="tabs">
+            <button class="tab-button active" data-tab="search">Поиск</button>
+            <button class="tab-button" data-tab="all-products">Все товары</button>
         </div>
-        <div id="results"></div>
+
+        <div id="search-tab" class="tab-content active">
+            <div class="search-controls">
+                <input type="text" id="searchInput" placeholder="Введите название товара...">
+                <select id="modelSelect">
+                    <option value="mpnet">MPNet Base</option>
+                    <option value="minilm">MiniLM</option>
+                    <option value="qa-mpnet">QA MPNet</option>
+                    <option value="multilingual">Multilingual MPNet</option>
+                </select>
+                <select id="datasetSelect">
+                    <option value="amazon">Amazon</option>
+                    <option value="wildberries">Wildberries</option>
+                </select>
+                <button id="searchButton">Найти</button>
+            </div>
+            <div id="results"></div>
+        </div>
+
+        <div id="all-products-tab" class="tab-content">
+            <div class="products-container">
+                <div class="dataset-section">
+                    <h2>Amazon</h2>
+                    <div id="amazon-products"></div>
+                </div>
+                <div class="dataset-section">
+                    <h2>Wildberries</h2>
+                    <div id="wildberries-products"></div>
+                </div>
+            </div>
+            <div class="pagination">
+                <button id="prevPage" disabled>Предыдущая</button>
+                <span id="currentPage">Страница 1</span>
+                <button id="nextPage">Следующая</button>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
