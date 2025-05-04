@@ -24,7 +24,6 @@ def generate_all_multi_match_queries(word):
         "name^2",
         "categories^3",
         "params_str",
-        "n_grams"
     ]
     return {
         "multi_match": {
@@ -59,6 +58,7 @@ def search():
 
     # Создаем комбинированный запрос с взвешенной суммой оценок
     payload = {
+        "explain":True,
         "query": {
             "script_score": {
                 "query": generate_all_multi_match_queries(query),
@@ -80,14 +80,14 @@ def search():
                     """,
                     "params": {
                         "query_vector": encode_text(query, model_name),
-                        "vector_weight": 0.7,  # Вес для векторного поиска
-                        "text_weight": 0.3,    # Вес для полнотекстового поиска
+                        "vector_weight": 1,  # Вес для векторного поиска
+                        "text_weight": 0,    # Вес для полнотекстового поиска
                         "max_score": 10.0      # Максимальная ожидаемая оценка для полнотекстового поиска
                     }
                 }
             }
         },
-        "size": 10
+        "size": 10,
     }
     
     response = requests.post(url, headers=headers, json=payload)
@@ -99,33 +99,47 @@ def search():
 
 @app.route('/all_products', methods=['GET'])
 def get_all_products():
-    page = int(request.args.get('page', 1))
-    size = int(request.args.get('size', 20))
-    
-    # Получаем товары из Amazon
-    amazon_url = f"http://localhost:9200/products_mpnet_amazon/_search"
-    amazon_payload = {
-        "query": {"match_all": {}},
-        "from": (page - 1) * size,
-        "size": size
-    }
-    
-    # Получаем товары из Wildberries
-    wildberries_url = f"http://localhost:9200/products_mpnet_wildberries/_search"
-    wildberries_payload = {
-        "query": {"match_all": {}},
-        "from": (page - 1) * size,
-        "size": size
-    }
-    
-    headers = {'Content-Type': 'application/json'}
-    
     try:
+        page = int(request.args.get('page', 1))
+        size = int(request.args.get('size', 20))
+        
+        # Получаем товары из Amazon
+        amazon_url = f"http://localhost:9200/products_amazon_mpnet/_search"
+        amazon_payload = {
+            "query": {"match_all": {}},
+            "from": (page - 1) * size,
+            "size": size
+        }
+        
+        wildberries_url = f"http://localhost:9200/products_wildberries_multilingual/_search"
+        wildberries_payload = {
+            "query": {"match_all": {}},
+            "from": (page - 1) * size,
+            "size": size
+        }
+        
+        headers = {'Content-Type': 'application/json'}
+        
+        # Логируем запросы
+        print(f"Making request to Amazon: {amazon_url}")
+        print(f"Amazon payload: {json.dumps(amazon_payload)}")
+        
         amazon_response = requests.post(amazon_url, headers=headers, json=amazon_payload)
+        
+        print(f"Amazon response status: {amazon_response.status_code}")
+        if amazon_response.status_code != 200:
+            print(f"Amazon error response: {amazon_response.text}")
+            return jsonify({'error': f'Amazon request failed: {amazon_response.text}'}), 500
+            
+        print(f"Making request to Wildberries: {wildberries_url}")
+        print(f"Wildberries payload: {json.dumps(wildberries_payload)}")
+        
         wildberries_response = requests.post(wildberries_url, headers=headers, json=wildberries_payload)
         
-        if amazon_response.status_code != 200 or wildberries_response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch results'}), 500
+        print(f"Wildberries response status: {wildberries_response.status_code}")
+        if wildberries_response.status_code != 200:
+            print(f"Wildberries error response: {wildberries_response.text}")
+            return jsonify({'error': f'Wildberries request failed: {wildberries_response.text}'}), 500
             
         amazon_data = amazon_response.json()
         wildberries_data = wildberries_response.json()
@@ -143,6 +157,9 @@ def get_all_products():
         return jsonify(all_products)
         
     except Exception as e:
+        print(f"Error in get_all_products: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': str(e)}), 500
 
 @app.get("/")

@@ -48,12 +48,12 @@ def load_and_index_dataset():
                     "params_str": product.get('product_information', ''),
                     "picture": 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pixsy.com%2Fimage-theft%2Fverify-image-source-copyright-owner&psig=AOvVaw3sptq6uKBUX8dL051JtPC8&ust=1741552195372000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKC90veo-4sDFQAAAAAdAAAAABAO'
                 }
-                
+
                 # Индексация для каждой модели
                 for model_name, model in models.items():
                     payload = product_dict.copy()
                     payload["embedding"] = encode_product(product_dict, model)
-                    
+
                     bulk_data.append({
                         "index": {
                             "_index": f"products_amazon_{model_name}",
@@ -74,12 +74,12 @@ def load_and_index_dataset():
             try:
                 product_dict = {
                     "id": product.get('id', f"wb_{index}"),
-                    "name": product.get('name', ''),
-                    "brand": product.get('brand', ''),
+                    "name": product.get('imt_name', ''),
+                    "brand": product.get('brand_name', ''),
                     "description": product.get('description', ''),
-                    "categories": product.get('category', ''),
-                    "params_str": product.get('characteristics', ''),
-                    "picture": product.get('image', '')
+                    "categories": product.get('subj_name', ''),
+                    "params_str": product.get('бежевый', ''),
+                    "picture": 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pixsy.com%2Fimage-theft%2Fverify-image-source-copyright-owner&psig=AOvVaw3sptq6uKBUX8dL051JtPC8&ust=1741552195372000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKC90veo-4sDFQAAAAAdAAAAABAO'
                 }
                 
                 # Индексация только для multilingual модели

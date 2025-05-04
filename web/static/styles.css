@@ -74,6 +74,12 @@ body {
     background-color: white;
 }
 
+#modelSelect option:disabled {
+    background-color: #f0f0f0;
+    color: #999;
+    cursor: not-allowed;
+}
+
 #searchButton, #loadAllProductsButton {
     padding: 10px 20px;
     background-color: #007bff;
@@ -91,6 +97,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding: 0 10px;
 }
 
 .dataset-section {
@@ -103,6 +110,83 @@ body {
     margin-top: 0;
     margin-bottom: 15px;
     color: #333;
+}
+
+#amazon-products, #wildberries-products {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+}
+
+.result-item {
+    flex: 0 0 calc(10% - 9px); /* 10 items per row with 10px gap */
+    min-width: 120px;
+    height: 160px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 6px;
+}
+
+.result-item:hover {
+    transform: translateY(-3px);
+}
+
+.result-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.result-card img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.result-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px 0;
+}
+
+.result-title {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0 0 4px 0;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.2;
+}
+
+.result-description {
+    font-size: 10px;
+    text-align: center;
+    color: #555;
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    margin: 0;
+    line-height: 1.2;
 }
 
 .pagination {
@@ -144,50 +228,6 @@ body {
     white-space: nowrap;
     flex-wrap: wrap;
     justify-content: center;
-}
-
-.result-item {
-    flex: 0 0 auto;
-    width: 150px;
-    height: 180px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    transition: transform 0.2s ease-in-out;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 8px;
-}
-
-.result-item:hover {
-    transform: translateY(-3px);
-}
-
-.result-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 3px;
-    text-align: center;
-    white-space: normal; /* Разрешаем перенос строк */
-    word-break: break-word; /* Обрезаем длинные слова, если они не помещаются */
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.result-description {
-    font-size: 12px;
-    text-align: center;
-    color: #555;
-    white-space: normal; /* Разрешаем перенос строк */
-    word-break: break-word; /* Обрезаем длинные слова */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 4; /* Ограничиваем описание до 4 строк */
-    -webkit-box-orient: vertical;
-    max-height: 48px; /* Ограничиваем максимальную высоту для 4 строк */
 }
 
 .no-results {

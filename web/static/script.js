@@ -16,6 +16,30 @@ document.querySelectorAll('.tab-button').forEach(button => {
     });
 });
 
+// Dataset selection handler
+document.getElementById('datasetSelect').addEventListener('change', function() {
+    const modelSelect = document.getElementById('modelSelect');
+    const selectedDataset = this.value;
+    
+    if (selectedDataset === 'wildberries') {
+        // Сохраняем текущую выбранную модель
+        const currentModel = modelSelect.value;
+        
+        // Отключаем все опции кроме multilingual
+        Array.from(modelSelect.options).forEach(option => {
+            option.disabled = option.value !== 'multilingual';
+        });
+        
+        // Устанавливаем multilingual
+        modelSelect.value = 'multilingual';
+    } else {
+        // Разблокируем все опции
+        Array.from(modelSelect.options).forEach(option => {
+            option.disabled = false;
+        });
+    }
+});
+
 // Search functionality
 document.getElementById('searchButton').addEventListener('click', function() {
     const query = document.getElementById('searchInput').value;

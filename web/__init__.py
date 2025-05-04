@@ -37,5 +37,5 @@ with pyzstd.ZstdFile(filepath, 'rb') as zf:
 
 dataset_wildberries = Dataset.from_list(records).select(range(1000))
 print('load amazon dataset')
-dataset_amazon = load_dataset(datasets[0], split='train').select(range(1000))
+dataset_amazon = None#load_dataset(datasets[0], split='train').select(range(1000))
 print('Datasets loaded')
