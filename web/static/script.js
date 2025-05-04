@@ -110,14 +110,13 @@ function displayAllProducts(data) {
 
 function createProductCard(product) {
     const { name, description, picture } = product;
-    const imageUrl = 'https://thumb.ac-illust.com/b1/b170870007dfa419295d949814474ab2_t.jpeg';
-    
+
     const item = document.createElement('div');
     item.className = 'result-item';
     
     item.innerHTML = `
         <div class="result-card">
-            <img src="${imageUrl}" alt="${name}" width="150" height="80" />
+            <img src="${picture}" alt="${name}" width="150" height="80" />
             <div class="result-info">
                 <h3 class="result-title">${name}</h3>
                 <p class="result-description">${description}</p>

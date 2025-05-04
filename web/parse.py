@@ -41,12 +41,12 @@ def load_and_index_dataset():
             try:
                 product_dict = {
                     "id": product.get('uniq_id', index),
-                    "name": product.get('product_name', ''),
-                    "brand": product.get('manufacturer', ''),
+                    "name": product.get('title', ''),
+                    "brand": product.get('store', ''),
                     "description": product.get('description', ''),
-                    "categories": product.get('amazon_category_and_sub_category', ''),
-                    "params_str": product.get('product_information', ''),
-                    "picture": 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pixsy.com%2Fimage-theft%2Fverify-image-source-copyright-owner&psig=AOvVaw3sptq6uKBUX8dL051JtPC8&ust=1741552195372000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKC90veo-4sDFQAAAAAdAAAAABAO'
+                    "categories": product.get('main_category', ''),
+                    "params_str": product.get('details', ''),
+                    "picture": product.get('image', '')
                 }
 
                 # Индексация для каждой модели
